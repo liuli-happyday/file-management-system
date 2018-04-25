@@ -3,6 +3,25 @@
 
 ## 建表语句，初始化根文件夹
 ``` sql
+# 用户表
+DROP TABLE IF EXISTS `t_user`;
+CREATE TABLE `t_user` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `username` varchar(128) NOT NULL DEFAULT '' COMMENT '用户名',
+  `password` varchar(128) NOT NULL DEFAULT '' COMMENT '密码',
+  `nickname` varchar(128) NOT NULL DEFAULT '' COMMENT '昵称',
+  `remark` varchar(256) NOT NULL DEFAULT '' COMMENT '描述',
+  `status` int(1) NOT NULL DEFAULT '1' COMMENT '状态（0：已删除，1：正常）',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`),
+  KEY `update_time` (`update_time`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='用户表';
+
+INSERT INTO t_user (username, password) VALUES ('hello', '7d793037a0760186574b0282f2f435e7');
+
+# 文件表
 DROP TABLE IF EXISTS `t_file_folder`;
 CREATE TABLE `t_file_folder` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ID',
