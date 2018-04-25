@@ -114,6 +114,12 @@
           case 'bmp':
           case 'gif':
             return 'icon-image';
+          case 'rar':
+          case 'zip':
+          case '7z':
+          case 'iso':
+          case 'cab':
+            return 'icon-rar';
           default:
             return 'icon-file';
         }

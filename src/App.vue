@@ -36,4 +36,10 @@ export default {
   flex-direction: column;
   height: 100%;
 }
+  .el-input__inner{
+    background-color: transparent;
+  }
+  .el-upload, .el-upload-dragger{
+    width: 100%;
+  }
 </style>

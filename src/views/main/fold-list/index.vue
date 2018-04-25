@@ -45,6 +45,7 @@
       foldData(val) {
         this.foldList = [];
         this.filterFoldData(this.foldList, val);
+        this.clearActive(this.foldList);
       },
       activeId(val) {
         this.clearActive(this.foldList);
@@ -52,32 +53,62 @@
     },
     methods: {
       collapseFold(fold) {
-        //
-        console.log(fold);
+        fold.collapse = !fold.collapse;
       },
       openFold(fold) {
         this.clearActive(this.foldList);
         fold.active = true;
-        // console.log(fold);
         this.$emit('getFolderFiles', fold.id);
       },
+      editFolder(folder) {
+        this.$prompt(`${folder.name}/`, '修改文件夹', {
+          inputPlaceholder: '请输入文件夹名称',
+          inputValue: folder.name,
+          inputPattern: /^\S+$/,
+          inputErrorMessage: '请输入文件夹名称'
+        }).then((val) => {
+          const name = val.value.trim();
+          if (name) {
+            const params = {
+              id: folder.id,
+              name
+            };
+            this.$api.editFolder(params).then((res) => {
+              this.$message.success('修改成功');
+              this.$emit('updateFolderList');
+            });
+          } else {
+            this.$message.error('文件夹名称不能为空');
+          }
+        }).catch((e) => {
+          // console.log(e);
+        });
+      },
       addFold(fold) {
-        this.$prompt(`${fold.name}/`,'新建文件夹').then((val) => {
-          // console.log(val);
-          const params = {
-            parentId: fold.id,
-            name: val.value
-          };
-          this.$api.createFolder(params).then((res) => {
-            this.$message.success('添加成功');
-            this.$emit('updateFolderList');
-          });
+        this.$prompt(`${fold.name}/`, '新建文件夹', {
+          inputPlaceholder: '请输入文件夹名称',
+          inputPattern: /^\S+$/,
+          inputErrorMessage: '请输入文件夹名称'
+        }).then((val) => {
+          const name = val.value.trim();
+          if (name) {
+            const params = {
+              parentId: fold.id,
+              name
+            };
+            this.$api.createFolder(params).then((res) => {
+              this.$message.success('添加成功');
+              this.$emit('updateFolderList');
+            });
+          } else {
+            this.$message.error('文件夹名称不能为空');
+          }
         }).catch((e) => {
           // console.log(e);
         });
       },
       delFold(fold) {
-        this.$confirm('确认删除该文件夹？', '提示').then((val) => {
+        this.$confirm(`确认删除“${fold.name}”文件夹？`, '提示').then((val) => {
           // console.log(val);
           this.$api.delFileAndFolder({ id: fold.id }).then((res) => {
             this.$emit('updateFolderList');
@@ -99,21 +130,29 @@
         const me = this;
         foldList.forEach((fold) => {
           let subMenuList = [];
-          // <a href="javascript:void(0);" class="fold_icon_collapse"><i class="el-icon-arrow-right"></i></a>
-          const arrowIcon = h('i', { 'class': 'el-icon-arrow-right' });
-          const arrow = h('a', {
-            'class': 'fold_icon_collapse',
-            attrs: {
-              href: 'javascript:void(0);'
-            },
-            on: {
-              click(e) {
-                e.stopPropagation();
-                e.preventDefault();
-                return me.collapseFold(fold);
+          // <a href="javascript:void(0);" class="fold_icon_collapse"><i class="el-icon-arrow-down"></i></a>
+          let arrow = null;
+          if(fold.subMenu.length > 0) {
+            const arrowIcon = h('i', {
+              'class': {
+                'el-icon-arrow-down': fold.collapse === false,
+                'el-icon-arrow-right': fold.collapse === true,
               }
-            }
-          }, [arrowIcon]);
+            });
+            arrow = h('a', {
+              'class': 'fold_icon_collapse',
+              attrs: {
+                href: 'javascript:void(0);'
+              },
+              on: {
+                click(e) {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  return me.collapseFold(fold);
+                }
+              }
+            }, [arrowIcon]);
+          }
 
           // <a href="javascript:void(0);" class="fold_name"><i class="icon iconfont icon-wenjian"></i> Pinjaman go</a>
           const menuIcon = h('i', { 'class': 'iconfont icon-fold' });
@@ -139,8 +178,22 @@
             subMenuList = this.createdFoldList(h, fold.subMenu, true);
           }
 
+          // <a href="javascript:void(0);" class="fold_operation edit_fold el-icon-edit"></a>
           // <a href="javascript:void(0);" class="fold_operation add_sub_fold el-icon-plus"></a>
           // <a href="javascript:void(0);" class="fold_operation del_fold el-icon-minus"></a>
+          const edit = h('a', {
+            'class': 'fold_operation edit_fold el-icon-edit',
+            attrs: {
+              href: 'javascript:void(0);'
+            },
+            on: {
+              click(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                return me.editFolder(fold);
+              }
+            }
+          });
           const plus = h('a', {
             'class': 'fold_operation add_sub_fold el-icon-plus',
             attrs: {
@@ -173,8 +226,11 @@
           }
 
           list.push(h('li', {
-            'class': 'fold'
-          }, [arrow, menu, plus, minus, subMenuList]));
+            'class': {
+              'fold': true,
+              'folder_collapse': fold.collapse
+            },
+          }, [arrow, menu, edit, plus, minus, subMenuList]));
         });
         return h('ul', {
           'class': sub ?  'sub_fold_list' : 'fold_list'
@@ -192,7 +248,8 @@
             name: item.name,
             active: item.active === true,
             subMenu,
-            rootFold: item.rootFold
+            rootFold: item.rootFold,
+            collapse: false
           });
         });
       },
@@ -214,9 +271,6 @@
           });
         });
       },
-      updateFolderList() {
-        // this
-      },
       activeFolder(id, list) {
         list.forEach((item) => {
           if (item.id === id) {
@@ -231,7 +285,6 @@
       return h('div', [list]);
     },
     created() {
-      // this.getTableData();
       this.foldList = [];
       this.filterFoldData(this.foldList, this.foldData);
       this.clearActive(this.foldList);
@@ -247,6 +300,9 @@
       padding-left: 20px;
       &:hover > .fold_operation{
         display: block;
+      }
+      &.folder_collapse > .sub_fold_list{
+        display: none;
       }
     }
     .fold_name{
@@ -284,6 +340,10 @@
     }
     .del_fold{
       color: #F56C6C;
+    }
+    .edit_fold{
+      right: 50px;
+      color: #409EFF;
     }
   }
 </style>

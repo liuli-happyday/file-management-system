@@ -16,6 +16,7 @@
 
 <script>
   import md5 from 'blueimp-md5';
+  import eventBus from '@/libs/event-bus';
 
   export default {
     name: 'login',
@@ -48,6 +49,7 @@
               // console.log(res);
               window.localStorage.setItem('name', this.form.name);
               window.localStorage.setItem('token', res.data.token);
+              eventBus.$emit('LOGIN');
               this.$router.push({ path: '/main' });
             });
           }
@@ -63,7 +65,7 @@
     height: 100%;
     width: 100%;
     /*background-image: url("../../assets/imgs/login_bg.jpg");*/
-    background-image: linear-gradient(45deg, #aaa, #00dbde);
+    background-image: linear-gradient(45deg, #ddd, #00dbde);
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center center;
@@ -73,7 +75,7 @@
     top: 40%;
     left: 50%;
     transform: translate(-50%, -50%);
-    border: 1px solid #ddd;
+    /*border: 1px solid #ddd;*/
     border-radius: 6px;
     width: 416px;
     padding: 20px;

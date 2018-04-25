@@ -24,11 +24,11 @@
         <fold-list :active-id="parentId" :fold-data="folderList" @updateFolderList="getFolderList" @getFolderFiles="getFileList"></fold-list>
       </div>
       <div class="file_list">
-        <!--<div class="fold_operation">-->
-          <!--<el-button type="primary">上传文件</el-button>-->
-        <!--</div>-->
+        <div class="fold_operation">
+          <el-button type="primary" @click="showUpload = true">上传文件</el-button>
+        </div>
         <!--action="https://jsonplaceholder.typicode.com/posts/"-->
-        <upload-file class="fold_operation" :parent-id="parentId" @uploadSuccess="uploadSuccess"></upload-file>
+        <!--<upload-file class="fold_operation" :parent-id="parentId" @uploadSuccess="uploadSuccess"></upload-file>-->
 
         <div class="file_list_table">
           <el-table :data="tableData" style="width: 100%">
@@ -50,12 +50,16 @@
         </div>
       </div>
 
+      <el-dialog :visible.sync="showUpload" title="文件上传">
+        <upload-file class="upload_component" :parent-id="parentId" @uploadSuccess="uploadSuccess"></upload-file>
+      </el-dialog>
     </div>
 </template>
 
 <script>
   import foldList from './fold-list';
-  import UploadFile from '../../components/upload-file';
+  // import UploadFile from '../../components/upload-file';
+  import UploadFile from '../../components/drag-upload';
   import axios from 'axios';
 
   export default {
@@ -70,7 +74,8 @@
           folderList: [],
           tempList: [],
           parentId: 0,
-          isAdd: false
+          isAdd: false,
+          showUpload: false
         };
     },
     methods: {
@@ -103,12 +108,19 @@
           // console.log(this.folderList);
           this.calcFolderList();
           if (this.folderList.length) {
-            this.getFileList(this.folderList[0].id);
+            let folderId = this.folderList[0].id;
+            if (this.$route.query.folderId) {
+              folderId = +this.$route.query.folderId;
+            }
+            this.getFileList(folderId);
           }
         });
       },
       getFileList(parentId = this.parentId) {
         this.parentId = parentId;
+        this.$router.replace({ path: '/main', query: { folderId: parentId } });
+        // this.$route.query.folderId = parentId;
+        // console.log(this.$route);
         const params = {
           pageSize: 12,
           pageNo: 1,
@@ -151,7 +163,7 @@
         });
       },
       uploadSuccess() {
-        console.log('hello upload');
+        // console.log('hello upload');
         this.getFileList(this.parentId);
       },
       downloadFile(row) {
@@ -218,6 +230,9 @@
       }
     },
     created() {
+      if (this.$route.query.folderId) {
+        this.parentId = +this.$route.query.folderId;
+      }
       this.getFolderList();
     }
   };

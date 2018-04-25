@@ -30,24 +30,12 @@ app.use(upload.single('file'));
 
 const tokenList = [];
 
-//设置跨域访问
-// app.all('*', function(req, res, next) {
-//   res.header("Access-Control-Allow-Origin", "*");
-//   res.header("Access-Control-Allow-Headers", "X-Requested-With");
-//   res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
-//   res.header("X-Powered-By",' 3.2.1');
-//   res.header("Content-Type", "application/json;charset=utf-8");
-//   if (req.method === 'OPTIONS') {
-//     res.send(200);
-//   } else {
-//     next();
-//   }
-// });
 
 app.use(express.static('static'));
 app.use('/' + downloadPath, express.static('uploads'));
 
 const mysql      = require('mysql');
+
 
 const pool = mysql.createPool({
   host     : 'localhost',
@@ -186,7 +174,10 @@ app.post('/getFileList', (req, res) => {
 //新建文件夹
 app.post('/createFolder', (req, res) => {
   const parentId = req.body.parentId;
-  const name = req.body.name;
+  let name = req.body.name;
+  if (name) {
+    name = name.trim();
+  }
   if (!isEffective(req)) {
     res.send({
       status: 0,
@@ -202,6 +193,32 @@ app.post('/createFolder', (req, res) => {
         status: 1,
         data: 'success',
         msg: '新建成功'
+      });
+    });
+  }
+});
+//编辑文件夹
+app.post('/editFolder', (req, res) => {
+  const id = req.body.id;
+  let name = req.body.name;
+  if (name) {
+    name = name.trim();
+  }
+  if (!isEffective(req)) {
+    res.send({
+      status: 0,
+      data: false,
+      msg: '登录过期',
+      error: '10000'
+    });
+    return;
+  }
+  if (name && id) {
+    queryDB(`UPDATE t_file_folder SET name  = '${name}' WHERE id = ${id};`, (results) => {
+      res.send({
+        status: 1,
+        data: 'success',
+        msg: '修改成功'
       });
     });
   }

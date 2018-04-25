@@ -16,6 +16,7 @@ export default {
   getFolderList: '/getFolderList',  // 获取文件夹列表
   getFileList: '/getFileList', // 获取文件列表
   createFolder: '/createFolder', // 创建文件夹
+  editFolder: '/editFolder', // 修改文件夹
   uploadFile: '/uploadFile', // 上传文件
   delFileAndFolder: '/delFileAndFolder', // 删除文件|文件夹
   download: {
