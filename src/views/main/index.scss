@@ -1,0 +1,70 @@
+
+.main{
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+}
+.left_menu{
+  width: 300px;
+  border-right: 1px solid #aaa;
+  overflow: auto;
+}
+.file_list{
+  padding: 20px;
+  flex: 1;
+  overflow: auto;
+}
+.fold_operation{
+  text-align: right;
+}
+
+/*.fold_list{
+  padding: 20px;
+  .fold{
+    position: relative;
+    padding-left: 20px;
+  }
+  .fold_name{
+    margin-bottom: 10px;
+  }
+  a{
+    display: block;
+    font-size: 16px;
+    color: #000;
+  }
+  .fold_icon_collapse{
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+  .fold_operation{
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 20px;
+    height: 20px;
+    //background-color: aqua;
+    border-radius: 6px;
+    text-align: center;
+    line-height: 20px;
+    color: #fff;
+    font-size: 12px;
+  }
+  .add_sub_fold{
+    right: 25px;
+    color: #409EFF;
+  }
+  .del_fold{
+    color: #F56C6C;
+  }
+}*/
+
+
+
+
+
+
+
+
+
+

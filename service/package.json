@@ -1,0 +1,24 @@
+{
+  "name": "file-management-system",
+  "version": "0.0.1",
+  "description": "file management system",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "vue",
+    "node",
+    "file"
+  ],
+  "author": "liuli",
+  "license": "ISC",
+  "dependencies": {
+    "blueimp-md5": "^2.10.0",
+    "body-parser": "^1.18.2",
+    "cors": "^2.8.4",
+    "express": "^4.16.3",
+    "multer": "^1.3.0",
+    "mysql": "^2.15.0"
+  }
+}
