@@ -1,6 +1,6 @@
 <template>
-    <div class="main">
-      <div class="left_menu">
+    <div ref="main" class="main" @mousedown="resizeMenuStart" @mousemove="resizeMenuMove" @mouseup="resizeMenuEnd">
+      <div ref="menu" class="left_menu" :class="{show: showMenu}">
         <!--<ul class="fold_list">
           <li class="fold">
             <a href="javascript:void(0);" class="fold_icon_collapse"><i class="el-icon-arrow-right"></i></a>
@@ -21,222 +21,94 @@
             </ul>
           </li>
         </ul>-->
-        <fold-list :active-id="parentId" :fold-data="folderList" @updateFolderList="getFolderList" @getFolderFiles="getFileList"></fold-list>
+        <fold-list :active-id="parentId" :fold-data="folderList" @updateFolderList="getFolderList" @getFolderFiles="getFileList"/>
+        <div id="resize_line" class="move_menu"></div>
       </div>
-      <div class="file_list">
+      <!--<el-scrollbar ref="menu" wrap-class="left_menu" wrap-style="width: 300px;">-->
+        <!--<fold-list :active-id="parentId" :fold-data="folderList" @updateFolderList="getFolderList" @getFolderFiles="getFileList"></fold-list>-->
+        <!--<div id="resize_line" class="move_menu"></div>-->
+      <!--</el-scrollbar>-->
+      <div class="file_list" @click="showMenu=false">
         <div class="fold_operation">
+          <el-button type="primary" @click="editEmail">邮件提醒</el-button>
           <el-button type="primary" @click="showUpload = true">上传文件</el-button>
         </div>
         <!--action="https://jsonplaceholder.typicode.com/posts/"-->
         <!--<upload-file class="fold_operation" :parent-id="parentId" @uploadSuccess="uploadSuccess"></upload-file>-->
 
         <div class="file_list_table">
-          <el-table :data="tableData" style="width: 100%">
+          <el-table ref="fileListTable" :data="tableData" style="width: 100%" @selection-change="handleSelectionChange">
+            <el-table-column type="selection" label="选择邮件附件"></el-table-column>
             <el-table-column prop="fileName" label="文件名称" min-width="180">
               <template slot-scope="scope">
                 <i class="iconfont" :class="scope.row.icon"></i> {{ scope.row.fileName }}
               </template>
             </el-table-column>
+            <el-table-column prop="size" label="文件大小" width="180">
+              <template slot-scope="scope">{{ scope.row.size | calcFileSize }}</template>
+            </el-table-column>
+            <el-table-column prop="creator" label="上传者" width="180"></el-table-column>
             <el-table-column prop="updateTime" label="上传时间" width="180">
-              <template slot-scope="scope">{{ scope.row.updateTime | formatTime('yyyy-MM-dd hh:mm:ss') }}</template>
+              <template slot-scope="scope">{{ scope.row.createTime | formatTime('yyyy-MM-dd hh:mm:ss') }}</template>
             </el-table-column>
             <el-table-column label="操作" width="180">
               <template slot-scope="scope">
                 <el-button type="text" @click="downloadFile(scope.row)">下载</el-button>
-                <el-button type="text" @click="delFile(scope.row)">删除</el-button>
+                <el-button v-if="username === scope.row.creator" type="text" @click="delFile(scope.row)">删除</el-button>
+                <el-button v-if="scope.row.icon === 'icon-image'" type="text" @click="showImage(scope.row)">查看</el-button>
               </template>
             </el-table-column>
           </el-table>
+        </div>
+        <div class="pagination" v-show="page.totalRecords">
+          <el-pagination @current-change="handleCurrentChange" :current-page="page.currentPage" :page-size="page.pageSize" layout="total, prev, pager, next, jumper" :total="page.totalRecords">
+          </el-pagination>
         </div>
       </div>
 
       <el-dialog :visible.sync="showUpload" title="文件上传">
         <upload-file class="upload_component" :parent-id="parentId" @uploadSuccess="uploadSuccess"></upload-file>
       </el-dialog>
+      <!--邮件提醒弹框start-->
+      <el-dialog :visible.sync="showEmailDialog" title="发送邮件提醒">
+        <el-form ref="emailForm" :model="emailForm" :rules="emailFormRules">
+          <el-row>
+            <el-col :span="12" style="padding-right: 10px;">
+              <el-form-item label="From" prop="sender">
+                <el-input v-model="emailForm.sender" type="text" placeholder="发件人"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12" style="padding-left: 10px;">
+              <el-form-item label="Subject" prop="subject">
+                <el-input v-model="emailForm.subject" type="text" placeholder="邮件主题"></el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-form-item label="To (多个收件人以英文逗号隔开，默认为pinjamango邮箱，其他邮箱请全拼)" prop="to">
+            <el-input v-model="emailForm.to" type="text" placeholder="收件人（ex: liuli, liuli@minivision.cn）"></el-input>
+          </el-form-item>
+          <el-form-item label="CC" prop="cc">
+            <el-input v-model="emailForm.cc" type="text" placeholder="CC（ex: liuli, liuli@minivision.cn）"></el-input>
+          </el-form-item>
+          <el-form-item label="Content" prop="text">
+            <el-input v-model="emailForm.text" type="text" placeholder="邮件内容"></el-input>
+          </el-form-item>
+          <el-form-item label="附件(不能大于30M)：">
+            <el-tag v-for="file in selectedList" :key="file.id" closable @close="handleRemoveAttachment(file)">{{file.fileName}}</el-tag>
+          </el-form-item>
+        </el-form>
+        <div slot="footer">
+          <el-button type="primary" @click="sendEmail">发送</el-button>
+          <el-button type="default" @click="showEmailDialog = false">取消</el-button>
+        </div>
+      </el-dialog>
+      <!--邮件提醒弹框end-->
+      <show-image-video :visible.sync="showImageDialog" :img-src="imgUrl">图片展示</show-image-video>
+      <canvas ref="canvas" id="canvas"></canvas>
     </div>
 </template>
 
-<script>
-  import foldList from './fold-list';
-  // import UploadFile from '../../components/upload-file';
-  import UploadFile from '../../components/drag-upload';
-  import axios from 'axios';
-
-  export default {
-    name: 'filesList',
-    components: {
-      foldList,
-      UploadFile
-    },
-    data() {
-        return {
-          tableData: [],
-          folderList: [],
-          tempList: [],
-          parentId: 0,
-          isAdd: false,
-          showUpload: false
-        };
-    },
-    methods: {
-      getFolderList() {
-        const params = {
-          parentId: 0
-        };
-        this.$api.getFolderList(params).then((res) => {
-          // console.log(res);
-          this.tempList = [];
-          res.data.forEach((item) => {
-            this.tempList.push({
-              id: item.id,
-              name: item.name,
-              rootFold: +item.root === 1,
-              active: false,
-              subMenu: [],
-              parentId: item.parentId
-            });
-          });
-          this.tempList.sort((a, b) => {
-            if (a.parentId > b.parentId) {
-              return 1;
-            } else if (a.parentId === b.parentId) {
-              return 0;
-            } else {
-              return -1;
-            }
-          });
-          // console.log(this.folderList);
-          this.calcFolderList();
-          if (this.folderList.length) {
-            let folderId = this.folderList[0].id;
-            if (this.$route.query.folderId) {
-              folderId = +this.$route.query.folderId;
-            }
-            this.getFileList(folderId);
-          }
-        });
-      },
-      getFileList(parentId = this.parentId) {
-        this.parentId = parentId;
-        this.$router.replace({ path: '/main', query: { folderId: parentId } });
-        // this.$route.query.folderId = parentId;
-        // console.log(this.$route);
-        const params = {
-          pageSize: 12,
-          pageNo: 1,
-          parentId
-        };
-        this.$api.getFileList(params).then((res) => {
-          if (res.data) {
-            this.tableData = res.data;
-          }
-        });
-      },
-      calcFolderList() {
-        // 整合文件夹列表，组合父子关系
-        const list = [];
-        const length = this.tempList.length;
-        for (let i = 0; i < length; i++) {
-          const folder = this.tempList.shift();
-          this.isAdd = false;
-          if (list.length === 0) {
-            list.push(folder);
-          } else {
-            this.calcSubFolderList(list, folder);
-            if(this.isAdd === false) {
-              list.push(folder);
-            }
-          }
-        }
-        this.folderList = list;
-      },
-      calcSubFolderList(list, folder) {
-        // 父子节点添加
-        list.forEach((item) => {
-          if(item.id === folder.parentId) {
-            item.subMenu.push(folder);
-            this.isAdd = true;
-          } else if (item.subMenu.length > 1) {
-            this.calcSubFolderList(item.subMenu, folder);
-            // console.log(this.isAdd, folder.name);
-          }
-        });
-      },
-      uploadSuccess() {
-        // console.log('hello upload');
-        this.getFileList(this.parentId);
-      },
-      downloadFile(row) {
-        // this.$api.download({ id: row.id }).then((res) => {
-        //   // this.$message.success('删除成功');
-        //   // this.getFileList(0);
-        // });
-        // window.open('http://localhost:3000/download/' + row.fileName);
-        window.open(row.url);
-        // axios.get('http://localhost:3000/download/' + row.fileName).then((res) => {
-        //   console.log(res);
-        // });
-      },
-      delFile(row) {
-        this.$confirm('确认删除该文件？', '提示').then((val) => {
-          this.$api.delFileAndFolder({ id: row.id }).then((res) => {
-            this.$message.success('删除成功');
-            this.getFileList();
-          });
-        }).catch((e) => {
-          // console.log(e);
-        });
-      }
-    },
-    filters: {
-      formatTime(date, block) {
-        if (!date) {
-          return '';
-        }
-
-        let format = block || 'yyyy-MM-dd';
-
-        if (typeof date === 'string' && /^\d+$/.test(date)) {
-          date = +date;
-        }
-
-        date = new Date(date);
-
-        const map = {
-          M: date.getMonth() + 1, // 月份
-          d: date.getDate(), // 日
-          h: date.getHours(), // 小时
-          m: date.getMinutes(), // 分
-          s: date.getSeconds(), // 秒
-          q: Math.floor((date.getMonth() + 3) / 3), // 季度
-          S: date.getMilliseconds() // 毫秒
-        };
-
-        format = format.replace(/([yMdhmsqS])+/g, (all, t) => {
-          let v = map[t];
-          if (v !== undefined) {
-            if (all.length > 1) {
-              v = `0${v}`;
-              v = v.substr(v.length - 2);
-            }
-            return v;
-          } else if (t === 'y') {
-            return (date.getFullYear().toString()).substr(4 - all.length);
-          }
-          return all;
-        });
-
-        return format;
-      }
-    },
-    created() {
-      if (this.$route.query.folderId) {
-        this.parentId = +this.$route.query.folderId;
-      }
-      this.getFolderList();
-    }
-  };
-</script>
+<script src="./main.js"></script>
 
 <style lang="scss" scoped>
   @import "index";

@@ -1,19 +1,18 @@
 <template>
   <div class="login">
-    <el-form ref="form" :model="form" :rules="rules" class="login_form" @submit.native="login">
-      <h1 class="system_title">文件管理系统</h1>
+    <el-form ref="form" :model="form" :rules="rules" class="login_form" @submit.native="register">
+      <!--<h1 class="system_title">文件管理系统</h1>-->
       <el-form-item label="用户名" prop="name">
         <el-input class="login_form_input" v-model="form.name" :autofocus="true"></el-input>
       </el-form-item>
       <el-form-item label="密码" prop="pwd">
         <el-input class="login_form_input" v-model="form.pwd" type="password"></el-input>
       </el-form-item>
+      <el-form-item label="口令" prop="word">
+        <el-input class="login_form_input" v-model="form.word"></el-input>
+      </el-form-item>
       <el-form-item class="login_form_button">
-        <el-button native-type="submit" type="primary">登 录</el-button>
-        <div class="registered">
-          <!--<a href="javascript:void(0);">注册</a>-->
-          <router-link to="/register">注册</router-link>
-        </div>
+        <el-button native-type="submit" type="primary">注 册</el-button>
       </el-form-item>
     </el-form>
   </div>
@@ -29,28 +28,34 @@
       return {
         form: {
           name: '',
-          pwd: ''
+          pwd: '',
+          word: ''
         },
         rules: {
           name: [
-            { required: true, message: '请输入用户名', trigger: 'blur' }
+            { required: true, message: '请输入用户名', trigger: 'blur' },
+            { pattern: /^.{1,100}$/, message: '用户名过长', trigger: 'blur' },
           ],
           pwd: [
             { required: true, message: '请输入密码', trigger: 'blur' }
+          ],
+          word: [
+            { required: true, message: '请输入口令', trigger: 'blur' }
           ]
         }
       }
     },
     methods: {
-      login(e) {
+      register(e) {
         e.preventDefault();
         this.$refs.form.validate((val) => {
           if (val) {
             const params = {
               name: this.form.name,
-              pwd: md5(this.form.pwd)
+              pwd: md5(this.form.pwd),
+              word: md5(this.form.word),
             };
-            this.$api.login(params).then((res) => {
+            this.$api.register(params).then((res) => {
               // console.log(res);
               window.localStorage.setItem('name', this.form.name);
               window.localStorage.setItem('token', res.data.token);

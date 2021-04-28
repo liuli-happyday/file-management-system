@@ -13,6 +13,7 @@
 export default {
   login: '/login',  // 登录
   logout: '/logout',  // 登出
+  register: '/register',  // 注册
   getFolderList: '/getFolderList',  // 获取文件夹列表
   getFileList: '/getFileList', // 获取文件列表
   createFolder: '/createFolder', // 创建文件夹
@@ -23,4 +24,5 @@ export default {
     url: '/download',
     method: 'get'
   }, // 下载文件
+  sendMail: '/sendMail', // 发送提醒邮件
 };

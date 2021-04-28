@@ -1,6 +1,7 @@
 <template>
     <div class="top_bar">
-      <h2>文件管理系统</h2>
+      <h2><span @click="toggleMenu" class="el-icon-menu"></span> 文件管理系统</h2>
+      <!--<div class="current_time">{{ clock }}</div>-->
       <div class="user_info">
         <span>hello, {{ userName }}</span>
         <a @click="logout" href="javascript:void(0);">注销</a>
@@ -9,13 +10,14 @@
 </template>
 
 <script>
-  import eventBus from '@/libs/event-bus';
+  import EventBus from '@/libs/event-bus';
 
   export default {
     name: 'topBar',
     data() {
       return {
-        userName: ''
+        userName: '',
+        clock: '2018-04-25 18:39:01'
       }
     },
     methods: {
@@ -30,11 +32,14 @@
         this.userName = window.localStorage.getItem('name');
       },
       listenEvent() {
-        eventBus.$on('LOGIN', this.loginEvent);
-      }
+        EventBus.$on('LOGIN', this.loginEvent);
+      },
+      toggleMenu() {
+        EventBus.$emit('toggleMenu');
+      },
     },
     destroyed() {
-      eventBus.$off('LOGIN', this.loginEvent);
+      EventBus.$off('LOGIN', this.loginEvent);
     },
     created() {
       // console.log('created top bar');

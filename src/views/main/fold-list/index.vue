@@ -21,6 +21,8 @@
 <!--</ul>-->
 
 <script>
+  const storage = window.localStorage;
+
   export default {
     name: 'foldList',
     props: {
@@ -38,7 +40,8 @@
     data() {
       return {
         show: true,
-        foldList: []
+        foldList: [],
+        username: storage.getItem('name'),
       };
     },
     watch: {
@@ -111,7 +114,10 @@
         this.$confirm(`确认删除“${fold.name}”文件夹？`, '提示').then((val) => {
           // console.log(val);
           this.$api.delFileAndFolder({ id: fold.id }).then((res) => {
-            this.$emit('updateFolderList');
+            if (res.status === 1) {
+              this.$message.success('删除成功');
+              this.$emit('updateFolderList');
+            }
           });
         }).catch((e) => {
           // console.log(e);
@@ -178,24 +184,30 @@
             subMenuList = this.createdFoldList(h, fold.subMenu, true);
           }
 
-          // <a href="javascript:void(0);" class="fold_operation edit_fold el-icon-edit"></a>
-          // <a href="javascript:void(0);" class="fold_operation add_sub_fold el-icon-plus"></a>
-          // <a href="javascript:void(0);" class="fold_operation del_fold el-icon-minus"></a>
-          const edit = h('a', {
-            'class': 'fold_operation edit_fold el-icon-edit',
-            attrs: {
-              href: 'javascript:void(0);'
-            },
-            on: {
-              click(e) {
-                e.stopPropagation();
-                e.preventDefault();
-                return me.editFolder(fold);
+          // <span class="fold_operation">
+          //  <a href="javascript:void(0);" class="operation_icon edit_fold el-icon-edit"></a>
+          //  <a href="javascript:void(0);" class="operation_icon add_sub_fold el-icon-plus"></a>
+          //  <a href="javascript:void(0);" class="operation_icon del_fold el-icon-minus"></a>
+          // </span>
+          let edit = null;
+          // 创建者===登录者才有编辑权限
+          if (this.username === fold.creator) {
+            edit = h('a', {
+              'class': 'operation_icon edit_fold el-icon-edit',
+              attrs: {
+                href: 'javascript:void(0);'
+              },
+              on: {
+                click(e) {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  return me.editFolder(fold);
+                }
               }
-            }
-          });
+            });
+          }
           const plus = h('a', {
-            'class': 'fold_operation add_sub_fold el-icon-plus',
+            'class': 'operation_icon add_sub_fold el-icon-plus',
             attrs: {
               href: 'javascript:void(0);'
             },
@@ -209,9 +221,10 @@
           });
           let minus = null;
           // console.log(fold.rootFold);
-          if(!fold.rootFold) {
+          // 创建者===登录者才有删除权限
+          if(!fold.rootFold && this.username === fold.creator) {
             minus = h('a', {
-              'class': 'fold_operation del_fold el-icon-minus',
+              'class': 'operation_icon del_fold el-icon-minus',
               attrs: {
                 href: 'javascript:void(0);'
               },
@@ -224,13 +237,16 @@
               }
             });
           }
+          const operationList = h('span', {
+            'class': 'fold_operation',
+          }, [edit, plus, minus]);
 
           list.push(h('li', {
             'class': {
               'fold': true,
               'folder_collapse': fold.collapse
             },
-          }, [arrow, menu, edit, plus, minus, subMenuList]));
+          }, [arrow, menu, operationList, subMenuList]));
         });
         return h('ul', {
           'class': sub ?  'sub_fold_list' : 'fold_list'
@@ -249,7 +265,8 @@
             active: item.active === true,
             subMenu,
             rootFold: item.rootFold,
-            collapse: false
+            collapse: !item.rootFold,
+            creator: item.creator
           });
         });
       },
@@ -266,7 +283,8 @@
               rootFold: +item.root === 1,
               active: false,
               subMenu: [],
-              parentId: item.parentId
+              parentId: item.parentId,
+              creator: item.creator
             });
           });
         });
@@ -298,17 +316,19 @@
     .fold{
       position: relative;
       padding-left: 20px;
-      &:hover > .fold_operation{
-        display: block;
-      }
       &.folder_collapse > .sub_fold_list{
         display: none;
       }
     }
     .fold_name{
       margin-bottom: 10px;
+      white-space: nowrap;
+      word-break: keep-all;
       &.active{
         color: #409EFF;
+      }
+      &:hover + .fold_operation{
+        display: block;
       }
     }
     a{
@@ -325,7 +345,7 @@
       position: absolute;
       top: 0;
       right: 0;
-      width: 20px;
+      /*width: 60px;*/
       height: 20px;
       border-radius: 6px;
       text-align: center;
@@ -333,16 +353,24 @@
       color: #fff;
       font-size: 12px;
       display: none;
+      &:hover{
+        display: block;
+      }
+    }
+    .operation_icon{
+      height: 20px;
+      line-height: 20px;
+      font-size: 12px;
+      width: 20px;
+      display: inline-block;
     }
     .add_sub_fold{
-      right: 25px;
       color: #409EFF;
     }
     .del_fold{
       color: #F56C6C;
     }
     .edit_fold{
-      right: 50px;
       color: #409EFF;
     }
   }

@@ -3,11 +3,24 @@
   flex: 1;
   display: flex;
   flex-direction: row;
+  position: relative;
+  overflow: auto;
 }
 .left_menu{
   width: 300px;
   border-right: 1px solid #aaa;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+.move_menu{
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 3px;
+  height: 100%;
+  //background: #00dbde;
+  cursor: col-resize;
 }
 .file_list{
   padding: 20px;
@@ -19,6 +32,11 @@
 }
 .upload_component{
   text-align: center;
+}
+
+.pagination{
+  text-align: right;
+  margin: 20px 0;
 }
 
 /*.fold_list{
@@ -62,8 +80,27 @@
   }
 }*/
 
+#canvas{
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: -1;
+}
 
-
+@media screen and (max-width: 769px) {
+  .left_menu {
+    position: fixed;
+    top: 0;
+    left: -300px;
+    z-index: 100;
+    max-height: 100vh;
+    transition: left 0.5s;
+    background: #fff;
+  }
+  .left_menu.show {
+    left: 0;
+  }
+}
 
 
 

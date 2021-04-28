@@ -4,6 +4,7 @@
         :action="actionUrl"
         name="file"
         drag
+        multiple
         style="width: 100%;"
         :data="data"
         :headers="headers"
