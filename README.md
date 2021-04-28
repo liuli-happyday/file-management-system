@@ -46,16 +46,16 @@ INSERT INTO t_file_folder (name, root) VALUES ('PinjamanGo', '1');
 ## 前端开发、编译
 ``` bash
 # install dependencies
-npm install
+yarn install
 
 # serve with hot reload at localhost:8080
-npm run dev
+yarn dev
 
 # build for production with minification
-npm run build
+yarn build
 
 # build for production and view the bundle analyzer report
-npm run build --report
+yarn build --report
 ```
 
 
@@ -65,7 +65,7 @@ npm run build --report
 cd service
 
 # 安装依赖
-npm install
+yarn install
 
 # 修改数据库信息
 const pool = mysql.createPool({
@@ -83,6 +83,8 @@ node index.js
 
 ```
 
+## 注册功能
+目前只采取固定口令验证
 
 
 
