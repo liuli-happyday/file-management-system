@@ -76,7 +76,17 @@ const pool = mysql.createPool({
   database : 'db'
 });
 
-# 开启服务端服务
+# 配置邮件提醒服务，需要邮箱开启该功能
+const mailTransport = nodemailer.createTransport({
+  host : 'smtp.126.com',
+  secure: true,
+  auth : {
+    user : 'zhangsan@126.com',
+    pass : 'zhangsan'
+  },
+});
+
+# 开启服务端服务，部署到服务器时，可以用pm2进行管理
 node index.js
 
 # 打开浏览器输入localhost:3000
